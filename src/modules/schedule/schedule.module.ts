@@ -6,7 +6,7 @@ import { ScheduleController } from './schedule.controller';
 import { TaskModule } from '../task/task.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ScheduleEntity]), TaskModule],
+  imports: [TaskModule, TypeOrmModule.forFeature([ScheduleEntity])],
   providers: [ScheduleService],
   controllers: [ScheduleController],
 })

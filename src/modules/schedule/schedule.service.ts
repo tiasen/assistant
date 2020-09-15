@@ -1,10 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { MongoRepository, ObjectID, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ScheduleEntity } from './schedule.entity';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { TaskService } from '../task/task.service';
-import RRule from 'rrule';
+import RRule, { RRuleSet } from 'rrule';
 import { CronJob } from 'cron';
 
 @Injectable()
@@ -23,13 +23,21 @@ export class ScheduleService {
   async save(taskId: string) {
     const task = await this.taskService.findById(taskId);
     if (task) {
-      const rruleStr = task.rrule;
-      const rRule = RRule.fromString(rruleStr);
-      const nextDate = rRule.after(new Date(), true);
-      const job = new CronJob(nextDate, () => {});
-      this.schedulerRegistry.addCronJob(taskId, job);
+      try {
+        const rruleStr = task.rrule;
+        let rRule = RRule.fromString(rruleStr);
+        const nextDate = rRule.after(rRule.options.dtstart, true);
+        console.log('nextDate', nextDate);
+        const job = new CronJob(nextDate, () => {
+          console.log(`Task: ${taskId} is executed!`);
+        });
+        this.schedulerRegistry.addCronJob(taskId, job);
+        job.start();
+      } catch (e) {
+        console.error(e);
+        throw new BadRequestException(`${taskId} is not existing!`);
+      }
     }
-    return await this.repository.save(taskId);
   }
 
   async update(id: ObjectID, member: ScheduleEntity) {

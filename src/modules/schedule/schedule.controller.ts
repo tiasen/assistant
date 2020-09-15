@@ -20,7 +20,7 @@ export class ScheduleController {
   }
 
   @Post(':taskId')
-  add(@Param('taskId') taskId: ObjectID) {
+  add(@Param('taskId') taskId: string) {
     return this.service.save(taskId);
   }
 
